@@ -1,7 +1,7 @@
 {
   "name": "人情记账本",
   "short_name": "记账本",
-  "start_url": "/",
+  "start_url": "/moneyless/",
   "display": "standalone",
   "background_color": "#f2f2f7",
   "theme_color": "#007aff",
