@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>人情记账本</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="./public/manifest.json">
+
+  <!-- iOS Safari 专属配置 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="人情记账">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>">
+
+  <link rel="stylesheet" href="./src/style.css">
+</head>
+<body>
+<header>
+  <h1>人情记账本</h1>
+  <div class="stats">
+    <div class="stat-item">
+      <span>别人请我</span>
+      <strong id="stat-in">¥0.00</strong>
+    </div>
+    <div class="stat-item">
+      <span>我请别人</span>
+      <strong id="stat-out">¥0.00</strong>
+    </div>
+    <div class="stat-item">
+      <span>净差额</span>
+      <strong id="stat-net">¥0.00</strong>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="form-section">
+    <h2>记一笔</h2>
+    <form id="record-form">
+      <div class="form-group">
+        <label>方向</label>
+        <div class="radio-group">
+          <label><input type="radio" name="type" value="in" checked> 别人请我 😋</label>
+          <label><input type="radio" name="type" value="out"> 我请别人 🤝</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="who">对象 (谁)</label>
+        <input type="text" id="who" placeholder="例如：张三" required>
+      </div>
+      <div class="form-group">
+        <label for="when">时间</label>
+        <input type="datetime-local" id="when" required>
+      </div>
+      <div class="form-group">
+        <label for="why">原因 (为何)</label>
+        <input type="text" id="why" placeholder="例如：生日聚餐、帮忙搬家" required>
+      </div>
+      <div class="form-group">
+        <label for="amount">金额 (¥)</label>
+        <input type="number" id="amount" step="0.01" min="0" placeholder="0.00" required>
+      </div>
+      <button type="submit" class="btn-primary">保存记录</button>
+    </form>
+  </section>
+
+  <section class="list-section">
+    <div class="list-header">
+      <h2>历史记录</h2>
+      <button id="export-btn" class="btn-secondary">导出数据</button>
+    </div>
+    <ul id="record-list" class="record-list">
+      <!-- 动态生成 -->
+    </ul>
+    <p id="empty-tip" class="empty-tip">暂无记录，快记一笔吧！</p>
+  </section>
+</main>
+
+<script src="./src/app.js"></script>
+<script>
+  // 注册 Service Worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log('Service Worker 注册成功'))
+            .catch(err => console.error('Service Worker 注册失败:', err));
+  }
+</script>
+</body>
+</html>
