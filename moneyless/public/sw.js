@@ -4,7 +4,7 @@ const ASSETS_TO_CACHE = [
     '/index.html',
     '/src/style.css',
     '/src/app.js',
-    '/public/manifest.json'
+    '/manifest.json'
 ];
 
 // 安装阶段：缓存核心文件
