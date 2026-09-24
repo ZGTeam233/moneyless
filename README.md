@@ -108,4 +108,4 @@ https://<你的用户名>.github.io/moneyless/
 
 ## License
 
-[MIT](./LICENSE)
+[APACHE-2.0](LICENSE)
