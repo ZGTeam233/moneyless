@@ -6,7 +6,7 @@
   <title>人情记账本</title>
 
   <!-- PWA Manifest -->
-  <link rel="manifest" href="/moneyless/assets/manifest-DRIdS95n.json">
+  <link rel="manifest" href="./manifest.json">
 
   <!-- iOS Safari 专属配置 -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,8 +14,9 @@
   <meta name="apple-mobile-web-app-title" content="人情记账">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍲</text></svg>">
 
+  <script type="module" crossorigin src="/moneyless/assets/index-D2y_GeHr.js"></script>
   <link rel="stylesheet" crossorigin href="/moneyless/assets/index-CRe5YdmD.css">
-</head>
+<script id="vite-plugin-pwa:register-sw" src="/moneyless/registerSW.js"></script></head>
 <body>
 <header>
   <h1>人情记账本</h1>
@@ -77,15 +78,6 @@
     <p id="empty-tip" class="empty-tip">暂无记录，快记一笔吧！</p>
   </section>
 </main>
-
-<script src="./src/app.js"></script>
-<script>
-  // 注册 Service Worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./public/sw.js')
-            .then(() => console.log('Service Worker 注册成功'))
-            .catch(err => console.error('Service Worker 注册失败:', err));
-  }
-</script>
+
 </body>
 </html>
