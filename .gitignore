@@ -1,0 +1,96 @@
+# ==========================================
+# Qt6 项目 .gitignore 配置
+# ==========================================
+
+# --- 1. 构建目录 (推荐 Out-of-source 构建) ---
+# Qt6 推荐使用 CMake 并在源码目录外构建，直接忽略整个构建目录即可
+build/
+build-*/
+cmake-build-*/
+out/
+install/
+
+# --- 2. CMake 生成文件 (针对 in-source 构建残留) ---
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+Testing/
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile.cmake
+
+# --- 3. qmake 生成文件 (若仍使用 qmake) ---
+.qmake.stash
+*.prl
+
+# --- 4. 编译产物 (目标文件、库、可执行文件) ---
+*.o
+*.obj
+*.pch
+*.lib
+*.dll
+*.so
+*.so.*
+*.dylib
+*.exe
+*.a
+*.ilk
+*.exp
+*.pdb
+*.wasm
+*.js
+
+# --- 5. Qt 自动生成的源文件 (若 in-source 构建) ---
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*_resource.rc
+
+# --- 6. IDE 与编辑器配置 ---
+# Qt Creator
+*.user
+*.autosave
+*.stash
+*.workspace
+
+# VS Code / CLion / Visual Studio
+.vscode/
+.idea/
+*.suo
+*.ncb
+*.sdf
+*.opensdf
+*.vcxproj.filters
+*.code-workspace
+
+# --- 7. 操作系统隐藏/临时文件 ---
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+._*
+.Spotlight-V100
+.Trashes
+
+# Linux
+*~
+.#*
+.directory
+
+# --- 8. 日志、临时文件与包管理器 ---
+*.log
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+
+# vcpkg / Conan (若使用相关包管理器)
+vcpkg_installed/
+conanfile.txt.lock

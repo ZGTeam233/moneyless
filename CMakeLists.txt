@@ -13,7 +13,12 @@ find_package(Qt6 COMPONENTS
         Widgets
         REQUIRED)
 
-add_executable(moneyless main.cpp)
+add_executable(moneyless src/main.cpp
+        src/domain.h
+        src/xmlledgerstore.h
+        src/xmlledgerstore.cpp
+        src/transactiontablemodel.h
+        src/transactiontablemodel.cpp)
 target_link_libraries(moneyless
         Qt::Core
         Qt::Gui
