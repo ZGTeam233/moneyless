@@ -2,6 +2,8 @@
 
 # 记账本 (moneyless) 
 
+设计给网页和 PC 的记账本
+
 ## License
 
 C++ 重制版使用 [GPL-3.0](LICENSE-gpl-3)
