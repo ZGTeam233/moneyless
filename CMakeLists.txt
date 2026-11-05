@@ -18,7 +18,11 @@ add_executable(moneyless src/main.cpp
         src/xmlledgerstore.h
         src/xmlledgerstore.cpp
         src/transactiontablemodel.h
-        src/transactiontablemodel.cpp)
+        src/transactiontablemodel.cpp
+        src/addtransactiondialog.h
+        src/addtransactiondialog.cpp
+        src/mainwindow.h
+        src/mainwindow.cpp)
 target_link_libraries(moneyless
         Qt::Core
         Qt::Gui

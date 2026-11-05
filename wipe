@@ -1,0 +1,3 @@
+#!/bin/bash
+
+rm -rf ~/.local/share/ZGTeam233/moneyless
