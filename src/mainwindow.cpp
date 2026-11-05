@@ -1,10 +1,11 @@
 #include "mainwindow.h"
-#include "addtransactiondialog.h"
-#include "xmlledgerstore.h"
+#include "transactiondialog.h"
+#include "databasemanager.h"
 
 #include <QDate>
 #include <QMessageBox>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QWidget>
 #include <QHeaderView>
 #include <QSet>
@@ -19,9 +20,8 @@ MainWindow::MainWindow(QWidget* parent)
     auto* central = new QWidget;
     auto* mainLayout = new QVBoxLayout(central);
 
-    // --- 顶部：月份选择与汇总 ---
+    // 顶部汇总
     auto* topLayout = new QVBoxLayout;
-    
     auto* monthLayout = new QHBoxLayout;
     monthLayout->addWidget(new QLabel(tr("查看月份:")));
     m_monthCombo = new QComboBox;
@@ -35,12 +35,9 @@ MainWindow::MainWindow(QWidget* parent)
     m_incomeLabel = new QLabel(tr("本月收入: ¥0.00"));
     m_expenseLabel = new QLabel(tr("本月支出: ¥0.00"));
     m_balanceLabel = new QLabel(tr("本月结余: ¥0.00"));
-    
-    // 简单样式
     m_incomeLabel->setStyleSheet("color: green; font-weight: bold;");
     m_expenseLabel->setStyleSheet("color: red; font-weight: bold;");
     m_balanceLabel->setStyleSheet("color: blue; font-weight: bold;");
-
     summaryLayout->addWidget(m_incomeLabel);
     summaryLayout->addSpacing(20);
     summaryLayout->addWidget(m_expenseLabel);
@@ -48,10 +45,9 @@ MainWindow::MainWindow(QWidget* parent)
     summaryLayout->addWidget(m_balanceLabel);
     summaryLayout->addStretch();
     topLayout->addLayout(summaryLayout);
-
     mainLayout->addLayout(topLayout);
 
-    // --- 中间：表格 ---
+    // 中间表格
     m_model = new TransactionTableModel(this);
     m_tableView = new QTableView;
     m_tableView->setModel(m_model);
@@ -60,75 +56,104 @@ MainWindow::MainWindow(QWidget* parent)
     m_tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
     mainLayout->addWidget(m_tableView);
 
-    // --- 底部：操作按钮 ---
+    // 底部按钮
     auto* bottomLayout = new QHBoxLayout;
-    m_addBtn = new QPushButton(tr("+ 新增交易"));
+    m_addBtn = new QPushButton(tr("+ 新增"));
+    m_editBtn = new QPushButton(tr("✏ 编辑"));
+    m_deleteBtn = new QPushButton(tr("🗑 删除"));
+    m_resetBtn = new QPushButton(tr("⚠ 恢复出厂"));
+    
+    m_resetBtn->setStyleSheet("color: red;");
+
     connect(m_addBtn, &QPushButton::clicked, this, &MainWindow::onAddTransaction);
+    connect(m_editBtn, &QPushButton::clicked, this, &MainWindow::onEditTransaction);
+    connect(m_deleteBtn, &QPushButton::clicked, this, &MainWindow::onDeleteTransaction);
+    connect(m_resetBtn, &QPushButton::clicked, this, &MainWindow::onResetFactory);
+
     bottomLayout->addWidget(m_addBtn);
+    bottomLayout->addWidget(m_editBtn);
+    bottomLayout->addWidget(m_deleteBtn);
     bottomLayout->addStretch();
+    bottomLayout->addWidget(m_resetBtn);
     mainLayout->addLayout(bottomLayout);
 
     setCentralWidget(central);
 }
 
-MainWindow::~MainWindow() = default;
-
-bool MainWindow::loadData(const QString& path)
+void MainWindow::loadInitialData()
 {
-    m_dataPath = path;
-    QString error;
-    if (!XmlLedgerStore::load(path, m_ledger, &error)) {
-        QMessageBox::critical(this, tr("加载失败"), error);
-        return false;
-    }
+    m_accounts = DatabaseManager::loadAllAccounts();
+    m_categories = DatabaseManager::loadAllCategories();
+    m_allTransactions = DatabaseManager::loadAllTransactions();
+    
+    // 生成映射表
+    m_accountMap.clear();
+    for (const auto& a : m_accounts) m_accountMap[a.id] = a.name;
+    
+    m_categoryMap.clear();
+    for (const auto& c : m_categories) m_categoryMap[c.id] = c.name;
 
-    // 初始化默认数据（仅当文件为空时）
-    bool changed = false;
-    if (m_ledger.accounts.isEmpty()) {
-        m_ledger.accounts.push_back({QUuid::createUuid(), tr("到店"), "store"});
-        m_ledger.accounts.push_back({QUuid::createUuid(), tr("美团"), "meituan"});
-        changed = true;
-    }
-    if (m_ledger.categories.isEmpty()) {
-        m_ledger.categories.push_back({QUuid::createUuid(), tr("推拿"), "income"});
-        m_ledger.categories.push_back({QUuid::createUuid(), tr("中药"), "income"});
-        m_ledger.categories.push_back({QUuid::createUuid(), tr("西药"), "income"});
-        m_ledger.categories.push_back({QUuid::createUuid(), tr("针灸"), "income"});
-        m_ledger.categories.push_back({QUuid::createUuid(), tr("拔罐"), "income"});
-        m_ledger.categories.push_back({QUuid::createUuid(), tr("精油"), "income"});
-        changed = true;
-    }
-    if (changed) {
-        saveData(path);
-    }
-
+    // 将映射表传给 Model
+    m_model->setAccounts(m_accountMap);
+    m_model->setCategories(m_categoryMap);
+    
     refreshMonthList();
-    return true;
-}
-
-bool MainWindow::saveData(const QString& path)
-{
-    QString error;
-    if (!XmlLedgerStore::save(path, m_ledger, &error)) {
-        QMessageBox::warning(this, tr("保存失败"), error);
-        return false;
-    }
-    return true;
 }
 
 void MainWindow::onAddTransaction()
 {
-    AddTransactionDialog dlg(m_ledger, this);
+    TransactionDialog dlg(m_accounts, m_categories, nullptr, this);
     if (dlg.exec() == QDialog::Accepted) {
         Transaction t = dlg.getTransaction();
-        m_ledger.transactions.push_back(t);
+        DatabaseManager::saveTransaction(t);
+        loadInitialData(); // 重新加载数据
+    }
+}
+
+void MainWindow::onEditTransaction()
+{
+    QModelIndexList selected = m_tableView->selectionModel()->selectedRows();
+    if (selected.isEmpty()) {
+        QMessageBox::warning(this, tr("提示"), tr("请先选择一条交易记录"));
+        return;
+    }
+
+    int row = selected.first().row();
+    Transaction t = m_filteredTransactions[row];
+
+    TransactionDialog dlg(m_accounts, m_categories, &t, this);
+    if (dlg.exec() == QDialog::Accepted) {
+        Transaction updated = dlg.getTransaction();
+        DatabaseManager::saveTransaction(updated);
+        loadInitialData();
+    }
+}
+
+void MainWindow::onDeleteTransaction()
+{
+    QModelIndexList selected = m_tableView->selectionModel()->selectedRows();
+    if (selected.isEmpty()) {
+        QMessageBox::warning(this, tr("提示"), tr("请先选择一条交易记录"));
+        return;
+    }
+
+    if (QMessageBox::question(this, tr("确认删除"), tr("确定要删除选中的交易记录吗？")) == QMessageBox::Yes) {
+        int row = selected.first().row();
+        QString id = m_filteredTransactions[row].id.toString(QUuid::WithoutBraces);
+        DatabaseManager::deleteTransaction(id);
+        loadInitialData();
+    }
+}
+
+void MainWindow::onResetFactory()
+{
+    if (QMessageBox::warning(this, tr("危险操作"), 
+                             tr("这将清空所有交易记录并重置账户/分类为默认状态。\n此操作不可恢复！\n\n确定要继续吗？"),
+                             QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes) {
         
-        saveData(m_dataPath);
-        refreshMonthList(); // 刷新月份列表（可能产生了新月份）
-        // 自动切换到刚添加的月份
-        QString currentMonthStr = t.date.toString("yyyy-MM");
-        int idx = m_monthCombo->findData(currentMonthStr);
-        if (idx != -1) m_monthCombo->setCurrentIndex(idx);
+        DatabaseManager::resetDatabase();
+        loadInitialData();
+        QMessageBox::information(this, tr("完成"), tr("已恢复出厂设置"));
     }
 }
 
@@ -144,15 +169,13 @@ void MainWindow::refreshMonthList()
     m_monthCombo->clear();
 
     QSet<QString> months;
-    for (const auto& t : m_ledger.transactions) {
+    for (const auto& t : m_allTransactions) {
         months.insert(t.date.toString("yyyy-MM"));
     }
 
-    // 降序排列月份 (修改这里)
     QStringList monthList = months.values();
     std::sort(monthList.begin(), monthList.end(), std::greater<QString>());
 
-    // --- 后续代码保持不变 ---
     m_monthCombo->addItem(tr("全部月份"), "all");
     for (const auto& m : monthList) {
         m_monthCombo->addItem(m, m);
@@ -160,11 +183,8 @@ void MainWindow::refreshMonthList()
 
     QString currentMonth = QDate::currentDate().toString("yyyy-MM");
     int idx = m_monthCombo->findData(currentMonth);
-    if (idx != -1) {
-        m_monthCombo->setCurrentIndex(idx);
-    } else if (m_monthCombo->count() > 1) {
-        m_monthCombo->setCurrentIndex(1);
-    }
+    if (idx != -1) m_monthCombo->setCurrentIndex(idx);
+    else if (m_monthCombo->count() > 1) m_monthCombo->setCurrentIndex(1);
 
     m_monthCombo->blockSignals(false);
     applyFilter();
@@ -175,16 +195,12 @@ void MainWindow::applyFilter()
     QString selectedMonth = m_monthCombo->currentData().toString();
     m_filteredTransactions.clear();
 
-    for (const auto& t : m_ledger.transactions) {
+    for (const auto& t : m_allTransactions) {
         QString tMonth = t.date.toString("yyyy-MM");
         if (selectedMonth == "all" || tMonth == selectedMonth) {
             m_filteredTransactions.push_back(t);
         }
     }
-
-    // 按日期降序排序
-    std::sort(m_filteredTransactions.begin(), m_filteredTransactions.end(), 
-              [](const Transaction& a, const Transaction& b) { return a.date > b.date; });
 
     m_model->setTransactions(m_filteredTransactions);
     updateSummary();
@@ -192,21 +208,15 @@ void MainWindow::applyFilter()
 
 void MainWindow::updateSummary()
 {
-    qint64 income = 0;
-    qint64 expense = 0;
-
+    qint64 income = 0, expense = 0;
     for (const auto& t : m_filteredTransactions) {
         if (t.type == TxType::Income) income += t.amountCents;
         else if (t.type == TxType::Expense) expense += t.amountCents;
     }
-
     qint64 balance = income - expense;
 
-    auto formatMoney = [](qint64 cents) {
-        return QString::number(cents / 100.0, 'f', 2);
-    };
-
-    m_incomeLabel->setText(tr("本月收入: ¥%1").arg(formatMoney(income)));
-    m_expenseLabel->setText(tr("本月支出: ¥%1").arg(formatMoney(expense)));
-    m_balanceLabel->setText(tr("本月结余: ¥%1").arg(formatMoney(balance)));
+    auto fmt = [](qint64 c) { return QString::number(c / 100.0, 'f', 2); };
+    m_incomeLabel->setText(tr("本月收入: ¥%1").arg(fmt(income)));
+    m_expenseLabel->setText(tr("本月支出: ¥%1").arg(fmt(expense)));
+    m_balanceLabel->setText(tr("本月结余: ¥%1").arg(fmt(balance)));
 }

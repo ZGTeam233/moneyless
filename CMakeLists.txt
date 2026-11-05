@@ -11,22 +11,26 @@ find_package(Qt6 COMPONENTS
         Core
         Gui
         Widgets
+        Sql
         REQUIRED)
 
 add_executable(moneyless src/main.cpp
         src/domain.h
-        src/xmlledgerstore.h
-        src/xmlledgerstore.cpp
         src/transactiontablemodel.h
         src/transactiontablemodel.cpp
         src/addtransactiondialog.h
         src/addtransactiondialog.cpp
         src/mainwindow.h
-        src/mainwindow.cpp)
+        src/mainwindow.cpp
+        src/databasemanager.h
+        src/databasemanager.cpp
+        src/transactiondialog.h
+        src/transactiondialog.cpp)
 target_link_libraries(moneyless
         Qt::Core
         Qt::Gui
         Qt::Widgets
+        Qt6::Sql
 )
 
 if (WIN32 AND NOT DEFINED CMAKE_TOOLCHAIN_FILE)

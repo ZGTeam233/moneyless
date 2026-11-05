@@ -1,8 +1,3 @@
-//
-// Created by wsnzg6 on 2026/11/4.
-// Copyright(c) 2026 ZGTeam233.
-//
-
 #include "transactiontablemodel.h"
 
 TransactionTableModel::TransactionTableModel(QObject* parent)
@@ -17,26 +12,35 @@ void TransactionTableModel::setTransactions(const QVector<Transaction>& transact
     endResetModel();
 }
 
+void TransactionTableModel::setAccounts(const QMap<QUuid, QString>& accounts)
+{
+    beginResetModel();
+    m_accounts = accounts;
+    endResetModel();
+}
+
+void TransactionTableModel::setCategories(const QMap<QUuid, QString>& categories)
+{
+    beginResetModel();
+    m_categories = categories;
+    endResetModel();
+}
+
 int TransactionTableModel::rowCount(const QModelIndex& parent) const
 {
-    if (parent.isValid())
-        return 0;
+    if (parent.isValid()) return 0;
     return static_cast<int>(m_transactions.size());
 }
 
 int TransactionTableModel::columnCount(const QModelIndex& parent) const
 {
-    if (parent.isValid())
-        return 0;
-    return 5;
+    if (parent.isValid()) return 0;
+    return 7; // 日期, 类型, 金额, 账户, 分类, 备注, ID
 }
 
 QVariant TransactionTableModel::data(const QModelIndex& index, int role) const
 {
-    if (!index.isValid())
-        return {};
-
-    if (index.row() < 0 || index.row() >= m_transactions.size())
+    if (!index.isValid() || index.row() >= m_transactions.size())
         return {};
 
     const auto& t = m_transactions[index.row()];
@@ -48,20 +52,17 @@ QVariant TransactionTableModel::data(const QModelIndex& index, int role) const
         return {};
 
     switch (index.column()) {
-    case 0:
-        return t.date.toString(QStringLiteral("yyyy-MM-dd"));
-    case 1:
-        return txTypeToString(t.type);
+    case 0: return t.date.toString(QStringLiteral("yyyy-MM-dd"));
+    case 1: return txTypeToString(t.type);
     case 2: {
         const QString sign = t.type == TxType::Expense ? QStringLiteral("-") : QStringLiteral("+");
         return sign + QString::number(t.amountCents / 100.0, 'f', 2);
     }
-    case 3:
-        return t.note;
-    case 4:
-        return t.id.toString(QUuid::WithoutBraces);
-    default:
-        return {};
+    case 3: return m_accounts.value(t.accountId, QStringLiteral("未知账户"));
+    case 4: return m_categories.value(t.categoryId, QStringLiteral("未知分类"));
+    case 5: return t.note;
+    case 6: return t.id.toString(QUuid::WithoutBraces);
+    default: return {};
     }
 }
 
@@ -71,17 +72,13 @@ QVariant TransactionTableModel::headerData(int section, Qt::Orientation orientat
         return {};
 
     switch (section) {
-    case 0:
-        return QStringLiteral("日期");
-    case 1:
-        return QStringLiteral("类型");
-    case 2:
-        return QStringLiteral("金额");
-    case 3:
-        return QStringLiteral("备注");
-    case 4:
-        return QStringLiteral("ID");
-    default:
-        return {};
+    case 0: return QStringLiteral("日期");
+    case 1: return QStringLiteral("类型");
+    case 2: return QStringLiteral("金额");
+    case 3: return QStringLiteral("账户");
+    case 4: return QStringLiteral("分类");
+    case 5: return QStringLiteral("备注");
+    case 6: return QStringLiteral("ID");
+    default: return {};
     }
 }

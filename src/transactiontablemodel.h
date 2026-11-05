@@ -1,12 +1,8 @@
-//
-// Created by wsnzg6 on 2026/11/4.
-// Copyright(c) 2026 ZGTeam233.
-//
-
 #pragma once
 
 #include "domain.h"
 #include <QAbstractTableModel>
+#include <QMap>
 
 class TransactionTableModel : public QAbstractTableModel
 {
@@ -16,6 +12,8 @@ public:
     explicit TransactionTableModel(QObject* parent = nullptr);
 
     void setTransactions(const QVector<Transaction>& transactions);
+    void setAccounts(const QMap<QUuid, QString>& accounts);
+    void setCategories(const QMap<QUuid, QString>& categories);
 
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
     int columnCount(const QModelIndex& parent = QModelIndex()) const override;
@@ -25,4 +23,6 @@ public:
 
 private:
     QVector<Transaction> m_transactions;
+    QMap<QUuid, QString> m_accounts;
+    QMap<QUuid, QString> m_categories;
 };

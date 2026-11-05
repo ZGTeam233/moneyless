@@ -1,7 +1,15 @@
 #!/bin/bash
 
-rm -rf build-release
+rel="moneyless-1.1-linux"
+
+mkdir $rel
+cd $rel
 mkdir build-release
 cd build-release
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+cmake ../.. -G Ninja -DCMAKE_BUILD_TYPE=Release
 ninja
+
+cd ../..
+tar -cvJf $rel.tar.xz ./$rel
+rm -rf ./$rel
