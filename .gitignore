@@ -10,6 +10,7 @@ cmake-build-*/
 out/
 install/
 *.tar
+*.tar.xz
 
 # --- 2. CMake 生成文件 (针对 in-source 构建残留) ---
 CMakeCache.txt
