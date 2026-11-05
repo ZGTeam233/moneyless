@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     QApplication app(argc, argv);
 
     QCoreApplication::setOrganizationName(QStringLiteral("ZGTeam233"));
-    QCoreApplication::setApplicationName(QStringLiteral("QtLedger"));
+    QCoreApplication::setApplicationName(QStringLiteral("moneyless"));
 
     const QString path = defaultLedgerPath();
 
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     }
 
     QMainWindow window;
-    window.setWindowTitle(QStringLiteral("QtLedger"));
+    window.setWindowTitle(QStringLiteral("moneyless"));
 
     auto* central = new QWidget;
     auto* layout = new QVBoxLayout(central);

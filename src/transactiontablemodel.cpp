@@ -42,7 +42,7 @@ QVariant TransactionTableModel::data(const QModelIndex& index, int role) const
     const auto& t = m_transactions[index.row()];
 
     if (role == Qt::TextAlignmentRole && index.column() == 2)
-        return Qt::AlignRight | Qt::AlignVCenter;
+        return int(Qt::AlignRight | Qt::AlignVCenter);
 
     if (role != Qt::DisplayRole)
         return {};
